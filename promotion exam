@@ -1,0 +1,224 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define constants
+#define MAX 100
+#define NAME_LENGTH 50
+
+// Structure to represent a student
+struct Student {
+    char name[NAME_LENGTH];
+    int studentNo;
+    int math, english, computer;
+};
+
+// Global array to store students and count
+struct Student students[MAX];
+int count = 0;
+
+// Function prototypes
+void addStudent();
+void viewStudents();
+void searchStudent();
+void calculateResults();
+void saveToFile();
+void loadFromFile();
+int validateMarks(int marks);
+void clearInputBuffer();
+
+int main() {
+    int choice;
+    loadFromFile();
+
+    while (1) {
+        // Display menu
+        printf("\n=====================================\n");
+        printf(" STUDENT MANAGEMENT SYSTEM\n");
+        printf("=====================================\n");
+        printf("1. Add Student\n");
+        printf("2. View Students\n");
+        printf("3. Search Student\n");
+        printf("4. Calculate Results\n");
+        printf("5. Save Results to File\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+
+        // Validate input
+        if (scanf("%d", &choice) != 1) {
+            printf("Invalid input!\n");
+            clearInputBuffer();
+            continue;
+        }
+
+        // Handle user choice
+        switch (choice) {
+            case 1: addStudent(); break;
+            case 2: viewStudents(); break;
+            case 3: searchStudent(); break;
+            case 4: calculateResults(); break;
+            case 5: saveToFile(); break;
+            case 6: exit(0);
+            default: printf("Invalid choice!\n");
+        }
+    }
+}
+
+// Clear input buffer
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+// Validate marks (0-100)
+int validateMarks(int marks) {
+    return marks >= 0 && marks <= 100;
+}
+
+// Add a new student
+void addStudent() {
+    if (count >= MAX) {
+        printf("Storage full!\n");
+        return;
+    }
+
+    clearInputBuffer();
+
+    // Get student details
+    printf("\nEnter Name: ");
+    fgets(students[count].name, sizeof(students[count].name), stdin);
+    students[count].name[strcspn(students[count].name, "\n")] = 0;
+
+    int tempNo;
+    printf("Enter Student No: ");
+    scanf("%d", &tempNo);
+
+    // Check for duplicate student number
+    for (int i = 0; i < count; i++) {
+        if (students[i].studentNo == tempNo) {
+            printf("Student number already exists!\n");
+            return;
+        }
+    }
+    students[count].studentNo = tempNo;
+
+    // Get marks
+    printf("Math: ");
+    scanf("%d", &students[count].math);
+    if (!validateMarks(students[count].math)) return;
+
+    printf("English: ");
+    scanf("%d", &students[count].english);
+    if (!validateMarks(students[count].english)) return;
+
+    printf("Computer: ");
+    scanf("%d", &students[count].computer);
+    if (!validateMarks(students[count].computer)) return;
+
+    count++;
+    printf("Student added successfully!\n");
+}
+
+// View all students
+void viewStudents() {
+    if (count == 0) {
+        printf("No records found.\n");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        printf("\n==============================\n");
+        printf("Name : %s\n", students[i].name);
+        printf("Student No : %d\n", students[i].studentNo);
+        printf("Math : %d\n", students[i].math);
+        printf("English : %d\n", students[i].english);
+        printf("Computer : %d\n", students[i].computer);
+    }
+}
+
+// Search for a student
+void searchStudent() {
+    int number, found = 0;
+    printf("Enter Student No: ");
+    scanf("%d", &number);
+
+    for (int i = 0; i < count; i++) {
+        if (students[i].studentNo == number) {
+            printf("\n==============================\n");
+            printf("Name : %s\n", students[i].name);
+            printf("Student No : %d\n", students[i].studentNo);
+            printf("Math : %d\n", students[i].math);
+            printf("English : %d\n", students[i].english);
+            printf("Computer : %d\n", students[i].computer);
+
+            int total = students[i].math + students[i].english + students[i].computer;
+            float average = total / 3.0;
+            char grade;
+            if (average >= 80) grade = 'A';
+            else if (average >= 70) grade = 'B';
+            else if (average >= 60) grade = 'C';
+            else if (average >= 50) grade = 'D';
+            else grade = 'F';
+
+            printf("Total : %d\n", total);
+            printf("Average : %.2f\n", average);
+            printf("Grade : %c\n", grade);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Student not found.\n");
+    }
+}
+
+// Calculate results for all students
+void calculateResults() {
+    if (count == 0) {
+        printf("No students available.\n");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        int total = students[i].math + students[i].english + students[i].computer;
+        float average = total / 3.0;
+        char grade;
+        if (average >= 80) grade = 'A';
+        else if (average >= 70) grade = 'B';
+        else if (average >= 60) grade = 'C';
+        else if (average >= 50) grade = 'D';
+        else grade = 'F';
+
+        printf("\n==============================\n");
+        printf("Name : %s\n", students[i].name);
+        printf("Student No : %d\n", students[i].studentNo);
+        printf("Total : %d\n", total);
+        printf("Average : %.2f\n", average);
+        printf("Grade : %c\n", grade);
+        printf("Status : %s\n", grade != 'F' ? "PASS" : "FAIL");
+    }
+}
+
+// Save students to file
+void saveToFile() {
+    FILE *file = fopen("students.txt", "w");
+    if (!file) return;
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s,%d,%d,%d,%d\n", students[i].name, students[i].studentNo, students[i].math, students[i].english, students[i].computer);
+    }
+    fclose(file);
+}
+
+// Load students from file
+void loadFromFile() {
+    FILE *file = fopen("students.txt", "r");
+    if (!file) return;
+
+    count = 0;
+    while (fscanf(file, " %49[^,],%d,%d,%d,%d", students[count].name, &students[count].studentNo, &students[count].math, &students[count].english, &students[count].computer) == 5) {
+        count++;
+    }
+    fclose(file);
+}
